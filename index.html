@@ -63,18 +63,18 @@ body { font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif; }
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
 
-<!-- NAVBAR RESPONSIF -->
+  <!-- NAVBAR -->
 <div id="navbar" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 
-                    w-full max-w-[340px] md:max-w-4xl px-3 md:px-4 navbar-visible">
+                    w-[95%] sm:w-full sm:max-w-4xl px-2 sm:px-4 navbar-visible">
   <div class="backdrop-blur-md bg-slate-900/60 border border-purple-500/20 rounded-full shadow-lg p-1 card-hover w-full">
     
     <!-- Desktop Menu -->
     <div class="navbar min-h-0 hidden md:flex">
-      <div class="flex-1 justify-start ml-6 md:ml-8">
-        <a href="#" class="text-lg md:text-xl font-bold gradient-text">Portofolio</a>
+      <div class="flex-1 justify-start ml-6 sm:ml-8">
+        <a href="#" class="text-lg sm:text-xl font-bold gradient-text">Portofolio</a>
       </div>
       <div class="flex-none">
-        <ul class="menu menu-horizontal mr-4 md:mr-6 px-1 space-x-1 text-xs md:text-sm">
+        <ul class="menu menu-horizontal mr-4 sm:mr-6 px-1 space-x-1 text-xs sm:text-sm">
           <li><a href="#about" class="btn btn-ghost btn-xs rounded-lg text-gray-300 hover:text-purple-400 btn-hover">Tentang</a></li>
           <li><a href="#education" class="btn btn-ghost btn-xs rounded-lg text-gray-300 hover:text-purple-400 btn-hover">Pendidikan</a></li>
           <li><a href="#skills" class="btn btn-ghost btn-xs rounded-lg text-gray-300 hover:text-purple-400 btn-hover">Keahlian</a></li>
@@ -83,6 +83,23 @@ body { font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif; }
         </ul>
       </div>
     </div>
+
+    <!-- Mobile Menu (Hamburger) -->
+    <div class="navbar min-h-0 md:hidden flex">
+      <div class="flex-1 justify-start ml-3">
+        <a href="#" class="text-base font-bold gradient-text">Portofolio</a>
+      </div>
+      <div class="flex-none">
+        <label for="nav-drawer" class="btn btn-ghost btn-circle text-purple-400 p-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </label>
+      </div>
+    </div>
+
+  </div>
+</div>
 
     <!-- Mobile Menu (Hamburger) -->
     <div class="navbar min-h-0 md:hidden flex">
@@ -306,11 +323,21 @@ body { font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif; }
                 Pelanggan dapat mengambil token, melakukan pemesanan, memberikan ulasan, dan melihat riwayat transaksi. 
                 Sistem dilengkapi dengan fitur manajemen pesanan, manajemen ulasan produk dan dashboard admin.
               </p>
-              <div class="card-actions mt-4">
-                <a href="javascript:void(0)" onclick="openModal(0)" 
-                    class="btn btn-primary btn-sm btn-hover">Lihat Detail</a>
-                <a href="https://github.com/Khepzzz/jalurlangit-coffee" target="_blank" class="btn btn-ghost btn-sm text-purple-400 btn-hover">Lihat di GitHub</a>
-              </div>
+              <div class="card-actions mt-4 flex gap-2">
+  <!-- Tombol Lihat Detail -->
+  <a href="javascript:void(0)" 
+     onclick="openModal(0)" 
+     class="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-purple-700 hover:shadow-lg transition duration-300 ease-in-out">
+     Lihat Detail
+  </a>
+
+  <!-- Tombol Lihat di GitHub -->
+  <a href="https://github.com/Khepzzz/jalurlangit-coffee" target="_blank"
+     class="px-4 py-2 border border-purple-500 text-purple-600 text-sm font-medium rounded-lg hover:bg-purple-50 hover:border-purple-600 hover:text-purple-700 transition duration-300 ease-in-out">
+     Lihat di GitHub
+  </a>
+</div>
+
             </div>
           </div>
         </div>
