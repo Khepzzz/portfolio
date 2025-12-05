@@ -34,6 +34,11 @@
       transform: translateY(-8px) scale(1.02); 
       box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3);
     }
+    @media (max-width: 768px) {
+      .card-hover:hover {
+        transform: translateY(-4px) scale(1.01);
+      }
+    }
     .skill-badge { 
       animation: float 3s ease-in-out infinite; 
       transition: all 0.3s ease;
@@ -65,6 +70,28 @@
       border: 1px solid rgba(139,92,246,0.2); 
     }
     .tool-icon:hover { filter: drop-shadow(0 0 10px rgba(139,92,246,0.8)); }
+    
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 9998;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    
+    .drawer-content {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 280px;
+      max-width: 85vw;
+      z-index: 9999;
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
   </style>
 </head>
 <body class="text-white">
@@ -93,7 +120,6 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [drawerOpen]);
 
-  // AOS + Back to top
   useEffect(() => {
     AOS.init({ duration: 1000, once: true, offset: 100 });
     const btn = document.getElementById('backToTop');
@@ -118,7 +144,7 @@ function App() {
     resize();
     window.addEventListener('resize', resize);
 
-    const particleCount = window.innerWidth < 768 ? 60 : 100;
+    const particleCount = window.innerWidth < 768 ? 40 : 100;
     const particles = Array.from({ length: particleCount }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
@@ -146,19 +172,21 @@ function App() {
         ctx.fill();
       });
 
-      particles.forEach((p1, i) => {
-        particles.slice(i + 1).forEach(p2 => {
-          const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
-          if (dist < 150) {
-            ctx.beginPath();
-            ctx.strokeStyle = `rgba(139, 92, 246, ${1 - dist / 150})`;
-            ctx.lineWidth = 0.8;
-            ctx.moveTo(p1.x, p1.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.stroke();
-          }
+      if (window.innerWidth >= 768) {
+        particles.forEach((p1, i) => {
+          particles.slice(i + 1).forEach(p2 => {
+            const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+            if (dist < 150) {
+              ctx.beginPath();
+              ctx.strokeStyle = `rgba(139, 92, 246, ${1 - dist / 150})`;
+              ctx.lineWidth = 0.8;
+              ctx.moveTo(p1.x, p1.y);
+              ctx.lineTo(p2.x, p2.y);
+              ctx.stroke();
+            }
+          });
         });
-      });
+      }
       animationId = requestAnimationFrame(animate);
     };
     animate();
@@ -177,18 +205,18 @@ function App() {
       });
     };
 
-  canvas.addEventListener('mousemove', handleMouseMove);
-  canvas.addEventListener('touchmove', (e) => {
-    const touch = e.touches[0];
-    handleMouseMove(touch);
-  });
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('touchmove', (e) => {
+      const touch = e.touches[0];
+      handleMouseMove(touch);
+    });
 
-  return () => {
-    window.removeEventListener('resize', resize);
-    canvas.removeEventListener('mousemove', handleMouseMove);
-    cancelAnimationFrame(animationId);
-  };
-}, []);
+    return () => {
+      window.removeEventListener('resize', resize);
+      canvas.removeEventListener('mousemove', handleMouseMove);
+      cancelAnimationFrame(animationId);
+    };
+  }, []);
 
   const projects = [
     { halaman:"Login (Generate Token)", 
@@ -209,254 +237,360 @@ function App() {
       images:["aset/detail/kelolaproduk.jpg","aset/detail/pegawaipesanan.png","aset/detail/kelolapembayaran.png","aset/detail/kelolaulasan.png"] }
   ];
 
-  const openModal = (i) => { setCurrentProject(i); setCurrentSlide(0); setModalOpen(true); document.body.style.overflow='hidden'; };
-  const closeModal = () => { setModalOpen(false); document.body.style.overflow='auto'; };
+  const openModal = (i) => { 
+    setCurrentProject(i); 
+    setCurrentSlide(0); 
+    setModalOpen(true); 
+    document.body.style.overflow='hidden'; 
+  };
+  
+  const closeModal = () => { 
+    setModalOpen(false); 
+    document.body.style.overflow='auto'; 
+  };
+  
   const nextSlide = () => setCurrentSlide(prev => (prev + 1) % projects[currentProject].images.length);
   const prevSlide = () => setCurrentSlide(prev => (prev - 1 + projects[currentProject].images.length) % projects[currentProject].images.length);
   const nextProject = () => setCurrentProject(prev => (prev + 1) % projects.length);
   const prevProject = () => setCurrentProject(prev => (prev - 1 + projects.length) % projects.length);
 
+  const closeDrawer = () => {
+    setDrawerOpen(false);
+    document.body.style.overflow = 'auto';
+  };
+
+  const openDrawer = () => {
+    setDrawerOpen(true);
+    document.body.style.overflow = 'hidden';
+  };
+
   return (
     <>
-{/* NAVBAR – FIX MOBILE 100% */}
-<div id="navbar" className="fixed top-4 left-4 right-4 z-50 pointer-events-none">
-  <div className="pointer-events-auto max-w-5xl mx-auto">
-    <div className="glassmorphism rounded-full shadow-2xl p-1.5 card-hover pulse-glow backdrop-blur-xl">
-      
-      {/* Desktop Navbar */}
-      <div className="navbar min-h-0 hidden md:flex justify-between px-8">
-        <a href="#" className="text-xl font-bold gradient-text">Portfolio</a>
-        <ul className="menu menu-horizontal space-x-2 text-sm">
-          {['About','Education','Projects','Skills','Contact'].map(x=>
-            <li key={x}><a href={`#${x.toLowerCase()}`} className="btn btn-ghost btn-sm rounded-full text-gray-300 hover:text-purple-400 btn-hover font-medium">{x}</a></li>
-          )}
-        </ul>
-      </div>
+      <div id="navbar" className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${navbarVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+        <div className="max-w-5xl mx-auto px-4 py-3">
+          <div className="glassmorphism rounded-full shadow-2xl p-1.5 card-hover pulse-glow backdrop-blur-xl">
+            <div className="navbar min-h-0 hidden md:flex justify-between px-8">
+              <a href="#" className="text-xl font-bold gradient-text">Portfolio</a>
+              <ul className="menu menu-horizontal space-x-2 text-sm">
+                {['About','Education','Projects','Skills','Contact'].map(x=>
+                  <li key={x}><a href={`#${x.toLowerCase()}`} className="btn btn-ghost btn-sm rounded-full text-gray-300 hover:text-purple-400 btn-hover font-medium">{x}</a></li>
+                )}
+              </ul>
+            </div>
 
-      {/* Mobile Navbar */}
-      <div className="navbar min-h-0 md:hidden flex justify-between px-5">
-        <a href="#" className="text-lg font-bold gradient-text">Portfolio</a>
-        <label className="btn btn-ghost btn-circle swap swap-rotate text-purple-300" onClick={()=>setDrawerOpen(!drawerOpen)}>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </label>
+            <div className="navbar min-h-0 md:hidden flex justify-between px-4 py-2">
+              <a href="#" className="text-lg font-bold gradient-text">Portfolio</a>
+              <button className="btn btn-ghost btn-circle btn-sm text-purple-300" onClick={openDrawer}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
 
       {drawerOpen && (
-        <div className="fixed inset-0 z-[9999] flex">
-          <div className="w-80 h-full glassmorphism p-6 space-y-6 overflow-y-auto" onClick={e=>e.stopPropagation()}>
-            <a href="#" className="text-2xl font-bold gradient-text block mb-8">Portfolio</a>
-            {['About','Education','Projects','Skills','Contact'].map(x=>(
-              <a key={x} href={`#${x.toLowerCase()}`} onClick={()=>setDrawerOpen(false)} className="block px-6 py-4 text-xl text-purple-200 hover:text-white hover:bg-purple-600/40 rounded-2xl transition-all duration-300 font-medium tracking-wide hover:translate-x-2">{x}</a>
-            ))}
+        <>
+          <div className="drawer-overlay" onClick={closeDrawer}></div>
+          <div className="drawer-content glassmorphism overflow-y-auto">
+            <div className="p-6 space-y-4">
+              <div className="flex items-center justify-between mb-6">
+                <a href="#" className="text-2xl font-bold gradient-text">Portfolio</a>
+              </div>
+              {['About','Education','Projects','Skills','Contact'].map(x=>(
+                <a key={x} href={`#${x.toLowerCase()}`} onClick={closeDrawer} className="block px-5 py-3 text-lg text-purple-200 hover:text-white hover:bg-purple-600/40 rounded-xl transition-all duration-300 font-medium">{x}</a>
+              ))}
+            </div>
           </div>
-          <div className="flex-1" onClick={()=>setDrawerOpen(false)}></div>
-        </div>
+        </>
       )}
 
-      <section className="min-h-screen flex items-center justify-center px-4 pt-24 relative overflow-hidden">
+      <section className="min-h-screen flex items-center justify-center px-12 pt-20 md:pt-24 pb-12 relative overflow-hidden">
         <canvas id="particle-canvas" className="absolute inset-0 w-full h-full pointer-events-auto"></canvas>
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900/90 via-purple-900/80 to-slate-900/90 z-10"></div>
-
         <div className="relative z-20 max-w-7xl mx-auto w-full">
-          <div className="grid md:grid-cols-2 gap-8 lg:gap-16 items-center px-4 md:px-8">
-
+          <div className="grid md:grid-cols-2 gap-8 lg:gap-16 items-center">
             <div className="flex justify-center md:justify-end order-1 md:order-2">
               <div className="relative group">
-                <div className="w-72 h-72 md:w-96 md:h-96 rounded-full bg-gradient-to-br from-purple-400 via-pink-500 to-purple-600 p-2 shadow-2xl card-hover pulse-glow transition-transform duration-700 group-hover:scale-105">
+                <div className="w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 lg:w-96 lg:h-96 rounded-full bg-gradient-to-br from-purple-400 via-pink-500 to-purple-600 p-2 shadow-2xl card-hover pulse-glow transition-transform duration-700 group-hover:scale-105">
                   <img 
                     src="aset/profil1.jpg" 
                     alt="David Kurniawan" 
-                    className="w-full h-full rounded-full object-cover border-8 border-slate-900 shadow-inner"
-                  />
+                    className="w-full h-full rounded-full object-cover border-4 md:border-8 border-slate-900 shadow-inner"/>
                 </div>
-                <div className="absolute -inset-6 rounded-full border-2 border-purple-500/30 animate-spin-slow opacity-60"></div>
-                <div className="absolute -inset-10 rounded-full border border-purple-400/20 opacity-40"></div>
-              </div>
-            </div>
-            <div className="text-center md:text-left space-y-6 order-2 md:order-1" data-aos="fade-up">
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
-                <span className="text-white">Hi, I'm</span><br/>
-                <span className="gradient-text block mt-2">Muhammad David Kurniawan</span>
-              </h1>
-              <p className="text-xl md:text-2xl text-gray-300 font-light">
-                Junior Web Developer • UI/UX Enthusiast
-              </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                <a href="#contact" 
-                  className="btn bg-gradient-to-r from-purple-600 to-pink-600 border-none text-white px-8 py-3 hover:from-pink-600 hover:to-purple-600 btn-hover shadow-xl rounded-full font-semibold">Get In Touch</a>
-                <a href="#about" 
-                  className="btn glassmorphism text-purple-300 hover:bg-purple-400 hover:text-white px-8 py-3 btn-hover rounded-full font-semibold">View Profile</a>
+                <div className="absolute -inset-4 md:-inset-6 rounded-full border-2 border-purple-500/30 animate-spin-slow opacity-60"></div>
+                <div className="absolute -inset-6 md:-inset-10 rounded-full border border-purple-400/20 opacity-40"></div>
               </div>
             </div>
 
+            <div className="text-center md:text-left space-y-4 md:space-y-6 order-2 md:order-1 xl:pr-20 px-4" data-aos="fade-up">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight">
+                <span className="text-white">Hi, I'm</span><br/>
+                <span className="gradient-text block mt-2">Muhammad David Kurniawan</span>
+              </h1>
+              <p className="text-lg sm:text-xl md:text-2xl text-gray-300 font-light">
+                Junior Web Developer • UI/UX Enthusiast
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center md:justify-start">
+                <a href="#contact" 
+                  className="btn bg-gradient-to-r from-purple-600 to-pink-600 border-none text-white px-6 md:px-8 py-3 hover:from-pink-600 hover:to-purple-600 btn-hover shadow-xl rounded-full font-semibold text-sm md:text-base">Get In Touch</a>
+                <a href="#about" 
+                  className="btn glassmorphism text-purple-300 hover:bg-purple-400 hover:text-white px-6 md:px-8 py-3 btn-hover rounded-full font-semibold text-sm md:text-base">View Profile</a>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section id="about" className="py-24 px-6 bg-slate-900/40" data-aos="fade-up">
-        <div className="max-w-7xl mx-auto text-center mb-16">
-          <h2 className="text-5xl md:text-6xl font-bold gradient-text inline-block">About Me</h2>
+      <section id="about" className="py-16 md:py-24 px-4 md:px-6 bg-slate-900/40" data-aos="fade-up">
+        <div className="max-w-7xl mx-auto text-center mb-12 md:mb-16">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold gradient-text inline-block">About Me</h2>
           <div className="w-24 h-1.5 bg-gradient-to-r from-purple-600 to-pink-600 mx-auto mt-4 rounded-full"></div>
         </div>
-        <div className="grid md:grid-cols-2 gap-8 max-w-7xl mx-auto">
-          <div className="glassmorphism p-8 rounded-2xl shadow-2xl card-hover" data-aos="fade-right">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-8 max-w-7xl mx-auto">
+          <div className="glassmorphism p-6 md:p-8 rounded-2xl shadow-2xl card-hover" data-aos="fade-right">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
               </div>
-              <h3 className="text-2xl font-bold text-purple-300">Personal Info</h3>
+              <h3 className="text-xl md:text-2xl font-bold text-purple-300">Personal Info</h3>
             </div>
-            <div className="space-y-4 text-gray-300">
-              <div className="flex gap-3"><span className="text-purple-400 font-semibold min-w-[80px]">Name:</span> Muhammad David Kurniawan</div>
-              <div className="flex gap-3"><span className="text-purple-400 font-semibold min-w-[80px]">Born:</span> Jepara, October 15, 2002</div>
-              <div className="flex gap-3"><span className="text-purple-400 font-semibold min-w-[80px]">Age:</span> 23 Years</div>
-              <div className="flex gap-3"><span className="text-purple-400 font-semibold min-w-[80px]">Location:</span> Jepara, Central Java</div>
+            <div className="space-y-3 md:space-y-4 text-sm md:text-base text-gray-300">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3"><span className="text-purple-400 font-semibold sm:min-w-[80px]">Name:</span> <span className="break-words">Muhammad David Kurniawan</span></div>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3"><span className="text-purple-400 font-semibold sm:min-w-[80px]">Born:</span> Jepara, October 15, 2002</div>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3"><span className="text-purple-400 font-semibold sm:min-w-[80px]">Age:</span> 23 Years</div>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3"><span className="text-purple-400 font-semibold sm:min-w-[80px]">Location:</span> Jepara, Central Java</div>
             </div>
           </div>
-          <div className="glassmorphism p-8 rounded-2xl shadow-2xl card-hover" data-aos="fade-left">
+          <div className="glassmorphism p-6 md:p-8 rounded-2xl shadow-2xl card-hover" data-aos="fade-left">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               </div>
-              <h3 className="text-2xl font-bold text-purple-300">Profile</h3>
+              <h3 className="text-xl md:text-2xl font-bold text-purple-300">Profile</h3>
             </div>
-            <p className="text-gray-300 leading-relaxed">
+            <p className="text-sm md:text-base text-gray-300 leading-relaxed">
              I'm passionate about web development and interface design. With hands-on experience in HTML, CSS, JavaScript, Tailwind CSS, and Laravel, plus proficiency in Figma for web design, I create engaging, intuitive, and user-friendly websites. I'm always eager to learn new technologies and committed to delivering exceptional digital experiences.</p>
           </div>
         </div>
       </section>
 
-      <section id="education" className="py-24 px-6" data-aos="fade-up">
-        <div className="max-w-7xl mx-auto text-center mb-16">
-          <h2 className="text-5xl md:text-6xl font-bold gradient-text inline-block">Education</h2>
+      <section id="education" className="py-16 md:py-24 px-4 md:px-6" data-aos="fade-up">
+        <div className="max-w-7xl mx-auto text-center mb-12 md:mb-16">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold gradient-text inline-block">
+            Education
+          </h2>
           <div className="w-24 h-1.5 bg-gradient-to-r from-purple-600 to-pink-600 mx-auto mt-4 rounded-full"></div>
         </div>
-        <div className="max-w-4xl mx-auto glassmorphism p-8 rounded-2xl shadow-2xl card-hover mb-6" data-aos="zoom-in">
-          <div className="flex flex-col md:flex-row items-start gap-6">
-            <img src="aset/umk logo.png" alt="UMK" className="w-24 h-24 rounded-2xl object-contain bg-purple p-3 shadow-lg"/>
-            <div className="flex-1 space-y-4">
-              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                <div>
-                  <h3 className="text-2xl md:text-3xl font-bold text-purple-300"><a href="https://umk.ac.id/" target="_blank" className="hover:underline">Muria Kudus University</a></h3>
-                  <p className="text-lg text-gray-300">Bachelor of Information Systems</p>
+
+        <div className="max-w-4xl mx-auto space-y-8">
+          {[
+            {
+              logo: "aset/umk logo.png",
+              name: "Muria Kudus University",
+              url: "https://umk.ac.id/",
+              degree: "Bachelor of Information Systems",
+              year: "2021 - 2025",
+              desc: "Studied concepts and applications of information technology including systems analysis, databases, web programming, project management, and information systems integration to support business and organizational needs. Also gained knowledge in computer networking fundamentals, data security, and professional web application development."
+            },
+            {
+              logo: "aset/mh.png",
+              name: "MA Mathalibul Huda Mlonggo",
+              url: "https://malidaprofetik.sch.id/",
+              degree: "Senior High School – Social Studies (IPS)",
+              year: "2017 - 2020",
+              desc: "Majored in Economics, Accounting & Sociology while gaining hands-on automotive skills (engine repair, electrical systems, vehicle maintenance). The perfect mix of business mindset and technical practice that led me to Information Systems."
+            },
+            {
+              logo: "aset/mh.png",
+              name: "MTs Mathalibul Huda Mlonggo",
+              url: "https://mtsmhmlonggo.sch.id/",
+              degree: "Junior High School",
+              year: "2014 - 2017",
+              desc: "Strong general education combined with intensive Islamic studies and daily Qur'an memorization. Started exploring computers and teaching myself basic programming here."
+            },
+            {
+              logo: "aset/none.png",
+              name: "MIS Raudlatut Thalibin Jambu Sari",
+              url: "",
+              degree: "Elementary School",
+              year: "2008 - 2014",
+              desc: "Foundation years with a heavy focus on character, discipline, and daily religious practice alongside regular academics. Curiosity and learning habits were built early."
+            }
+          ].map((edu, idx) => (
+            <div
+              key={idx}
+              className="glassmorphism p-6 md:p-8 rounded-2xl shadow-2xl card-hover transition-all duration-300 hover:shadow-purple-500/20"
+              data-aos="zoom-in"
+              data-aos-delay={idx * 100}>
+              <div className="flex flex-col sm:flex-row items-start gap-6">
+                <img
+                  src={edu.logo}
+                  alt={`${edu.name} logo`}
+                  className="w-20 h-20 md:w-24 md:h-24 rounded-2xl object-contain bg-purple-900/30 p-3 shadow-lg flex-shrink-0"/>
+                <div className="flex-1 space-y-4">
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                    <div>
+                      <h3 className="text-2xl md:text-3xl font-bold text-purple-300">
+                        {edu.url ? (
+                          <a href={edu.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:underline hover:text-pink-300 transition-colors">
+                            {edu.name}
+                          </a>
+                        ) : (
+                          edu.name
+                        )}
+                      </h3>
+                      <p className="text-lg md:text-xl text-pink-300 font-medium mt-1">
+                        {edu.degree}
+                      </p>
+                    </div>
+                    <div className="badge badge-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white border-none px-5 py-3 font-bold whitespace-nowrap">
+                      {edu.year}
+                    </div>
+                  </div>
+                  <p className="text-gray-300 text-base leading-relaxed">
+                    {edu.desc}
+                  </p>
                 </div>
-                <div className="badge badge-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white border-none px-6 py-4 font-semibold shadow-lg">2021 - 2025</div>
               </div>
-              <p className="text-gray-400">Studied concepts and applications of information technology including systems analysis, databases, web programming, project management, and information systems integration to support business and organizational needs. Also gained knowledge in computer networking fundamentals, data security, and professional web application development.</p>
             </div>
-          </div>
-        </div>
-        <div className="max-w-4xl mx-auto glassmorphism p-8 rounded-2xl shadow-2xl card-hover mb-6" data-aos="zoom-in">
-          <div className="flex flex-col md:flex-row items-start gap-6">
-            <img src="aset/mh.png" alt="MH" className="w-24 h-24 rounded-2xl object-contain bg-purple p-3 shadow-lg"/>
-            <div className="flex-1 space-y-4">
-              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                <div>
-                  <h3 className="text-2xl md:text-3xl font-bold text-purple-300"><a href="https://malidaprofetik.sch.id/" target="_blank" className="hover:underline">MA Mathalibul Huda Mlonggo</a></h3>
-                  <p className="text-lg text-gray-300">Senior High School – Social Studies (IPS)</p>
-                </div>
-                <div className="badge badge-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white border-none px-6 py-4 font-semibold shadow-lg">2017 - 2020</div>
-              </div>
-              <p className="text-gray-400">Majored in Economics, Accounting & Sociology while gaining hands-on automotive skills (engine repair, electrical systems, vehicle maintenance). The perfect mix of business mindset and technical practice that led me to Information Systems.</p>
-            </div>
-          </div>
-        </div>
-        <div className="max-w-4xl mx-auto glassmorphism p-8 rounded-2xl shadow-2xl card-hover mb-6" data-aos="zoom-in">
-          <div className="flex flex-col md:flex-row items-start gap-6">
-            <img src="aset/mh.png" alt="MH" className="w-24 h-24 rounded-2xl object-contain bg-purple p-3 shadow-lg"/>
-            <div className="flex-1 space-y-4">
-              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                <div>
-                  <h3 className="text-2xl md:text-3xl font-bold text-purple-300"><a href="https://mtsmhmlonggo.sch.id/" target="_blank" className="hover:underline">MTs Mathalibul Huda Mlonggo</a></h3>
-                  <p className="text-lg text-gray-300">Junior High School</p>
-                </div>
-                <div className="badge badge-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white border-none px-6 py-4 font-semibold shadow-lg">2014 - 2017</div>
-              </div>
-              <p className="text-gray-400">Strong general education combined with intensive Islamic studies and daily Qur’an memorization. Started exploring computers and teaching myself basic programming here.</p>
-            </div>
-          </div>
-        </div><div className="max-w-4xl mx-auto glassmorphism p-8 rounded-2xl shadow-2xl card-hover" data-aos="zoom-in">
-          <div className="flex flex-col md:flex-row items-start gap-6">
-            <img src="aset/none.png" alt="RT" className="w-24 h-24 rounded-2xl bg-purple p-3 shadow-lg"/>
-            <div className="flex-1 space-y-4">
-              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                <div>
-                  <h3 className="text-2xl md:text-3xl font-bold text-purple-300"><a className="hover:underline">MIS Raudlatut Thalibin Jambu Sari</a></h3>
-                  <p className="text-lg text-gray-300">Elementary School</p>
-                </div>
-                <div className="badge badge-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white border-none px-6 py-4 font-semibold shadow-lg">2008 - 2014</div>
-              </div>
-              <p className="text-gray-400">Foundation years with a heavy focus on character, discipline, and daily religious practice alongside regular academics. Curiosity and learning habits were built early.</p>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
-      <section id="projects" className="py-24 px-6 bg-slate-900/40" data-aos="fade-up">
-        <div className="max-w-7xl mx-auto text-center mb-16">
-          <h2 className="text-5xl md:text-6xl font-bold gradient-text inline-block pb-2">My Projects</h2>
+      <section id="projects" className="py-16 md:py-24 px-4 md:px-6 bg-slate-900/40" data-aos="fade-up">
+        <div className="max-w-7xl mx-auto text-center mb-12 md:mb-16">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold gradient-text inline-block pb-2">
+            My Projects
+          </h2>
           <div className="w-24 h-1.5 bg-gradient-to-r from-purple-600 to-pink-600 mx-auto mt-4 rounded-full"></div>
         </div>
-        <div className="max-w-5xl mx-auto glassmorphism p-8 rounded-2xl shadow-2xl card-hover" data-aos="zoom-in">
-          <div className="flex flex-col md:flex-row items-start gap-6">
-            <img src="aset/jalurlangit.png" alt="Jalur Langit" className="w-24 h-24 rounded-2xl object-contain bg-purple p-3 shadow-lg"/>
-            <div className="flex-1 space-y-4">
-              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                <div>
-                  <h3 className="text-2xl md:text-3xl font-bold text-purple-300 mb-2">Self-Service Website for Jalur Langit Coffee</h3>
-                  <p className="text-lg text-gray-300 flex flex-wrap gap-2">
-                    <span className="badge badge-sm bg-purple-600/50 text-purple-200 border-purple-500/30">Laravel</span>
-                    <span className="badge badge-sm bg-purple-600/50 text-purple-200 border-purple-500/30">MySQL</span>
-                    <span className="badge badge-sm bg-purple-600/50 text-purple-200 border-purple-500/30">Tailwind CSS</span>
+
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-10">
+          {[
+            {
+              img: "aset/jalurlangit.png",
+              title: "Self-Service Website for Jalur Langit Coffee",
+              year: "2025",
+              tech: ["Laravel", "MySQL", "Tailwind CSS", "Livewire"],
+              desc: "This website enables customers to place orders without login using a token system. Customers can generate tokens, make orders, leave reviews, and view transaction history. The system includes order management features, product review management, and an admin dashboard.",
+              github: "https://github.com/Khepzzz/jalurlangit-coffee",
+              modalIndex: 0
+            },
+          ].map((project, idx) => (
+            <div
+              key={idx}
+              className="glassmorphism p-6 md:p-8 rounded-2xl shadow-2xl card-hover transition-all duration-300 hover:shadow-purple-500/30"
+              data-aos="zoom-in"
+              data-aos-delay={idx * 150}>
+              <div className="flex flex-col sm:flex-row items-start gap-6 md:gap-8">
+                <img
+                  src={project.img}
+                  alt={project.title}
+                  className="w-20 h-20 md:w-28 md:h-28 rounded-2xl object-cover bg-purple-900/40 p-3 shadow-lg flex-shrink-0 border border-purple-500/30"/>
+                <div className="flex-1 space-y-4">
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                    <div>
+                      <h3 className="text-2xl md:text-3xl font-bold text-purple-300 leading-tight">
+                        {project.title}
+                      </h3>
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {project.tech.map((t, i) => (
+                          <span
+                            key={i}
+                            className="badge badge-sm md:badge-md bg-purple-600/40 text-purple-200 border border-purple-500/30 px-3 py-1">
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="badge badge-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white border-none px-5 py-3 font-bold">
+                      {project.year}
+                    </div>
+                  </div>
+                  <p className="text-gray-300 text-base leading-relaxed">
+                    {project.desc}
                   </p>
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                    <button
+                      onClick={() => openModal(project.modalIndex)}
+                      className="btn bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-none text-white shadow-lg rounded-full px-6 py-3 font-semibold transition-all">
+                      View Details
+                    </button>
+                    <a href={project.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn glassmorphism text-purple-300 hover:bg-purple-600/50 hover:text-white border border-purple-500/30 rounded-full px-6 py-3 font-semibold transition-all flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                      </svg>
+                      View on GitHub
+                    </a>
+                  </div>
                 </div>
-                <div className="badge badge-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white border-none px-6 py-4 font-semibold shadow-lg">2025</div>
-              </div>
-              <p className="text-gray-400">This website enables customers to place orders without login using a token system. Customers can generate tokens, make orders, leave reviews, and view transaction history. The system includes order management features, product review management, and an admin dashboard.</p>
-              <div className="flex flex-wrap gap-3">
-                <button onClick={()=>openModal(0)} className="btn bg-gradient-to-r from-purple-600 to-pink-600 border-none text-white btn-hover shadow-lg rounded-full px-6 font-semibold">View Details</button>
-                <a href="https://github.com/Khepzzz/jalurlangit-coffee" target="_blank" className="btn glassmorphism text-purple-300 hover:bg-purple-400 hover:text-white btn-hover rounded-full px-6 font-semibold">View on GitHub</a>
               </div>
             </div>
-          </div>
+          ))}
         </div>
       </section>
       
-      <section id="skills" className="py-24 px-6" data-aos="fade-up">
-        <div className="max-w-7xl mx-auto text-center mb-16">
-          <h2 className="text-5xl md:text-6xl font-bold gradient-text inline-block">Skills</h2>
+      <section id="skills" className="py-16 md:py-24 px-4 md:px-6" data-aos="fade-up">
+        <div className="max-w-7xl mx-auto text-center mb-12 md:mb-16">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold gradient-text inline-block">Skills</h2>
           <div className="w-24 h-1.5 bg-gradient-to-r from-purple-600 to-pink-600 mx-auto mt-4 rounded-full"></div>
         </div>
-        <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
-  
-          <div className="glassmorphism p-8 rounded-2xl shadow-2xl card-hover" data-aos="flip-left">
-            <div className="flex items-center gap-3 mb-6"><div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center"><svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg></div><h3 className="text-2xl font-bold text-purple-300">Hard Skills</h3></div>
-            <div className="flex flex-wrap gap-3">
-              {['HTML/CSS','Figma','Git & GitHub','PHP','Laravel','MySQL','Microsoft Word','Microsoft Excel'].map((s,i)=><span key={s} className="badge badge-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white skill-badge px-4 py-3 font-semibold shadow-lg" style={{animationDelay:`${i*0.2}s`}}>{s}</span>)}
+        <div className="grid md:grid-cols-3 gap-6 md:gap-8 max-w-7xl mx-auto">
+          <div className="glassmorphism p-6 md:p-8 rounded-2xl shadow-2xl card-hover" data-aos="flip-left">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+              </div>
+              <h3 className="text-xl md:text-2xl font-bold text-purple-300">Hard Skills</h3>
+            </div>
+            <div className="flex flex-wrap gap-2 md:gap-3">
+              {['HTML/CSS','Figma','Git & GitHub','PHP','Laravel','MySQL','Microsoft Word','Microsoft Excel'].map((s,i)=>
+                <span key={s} className="badge badge-sm md:badge-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white skill-badge px-3 md:px-4 py-2 md:py-3 font-semibold shadow-lg text-xs md:text-sm" style={{animationDelay:`${i*0.2}s`}}>{s}</span>
+              )}
             </div>
           </div>
 
-          <div className="glassmorphism p-8 rounded-2xl shadow-2xl card-hover" data-aos="flip-left" data-aos-delay="200">
-            <div className="flex items-center gap-3 mb-6"><div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center"><svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg></div><h3 className="text-2xl font-bold text-purple-300">Soft Skills</h3></div>
-            <div className="flex flex-wrap gap-3">
-              {['Teamwork','Problem Solving','Communication','Critical Thinking','Adaptability'].map((s,i)=><span key={s} className="badge badge-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white skill-badge px-4 py-3 font-semibold shadow-lg" style={{animationDelay:`${i*0.2}s`}}>{s}</span>)}
+          <div className="glassmorphism p-6 md:p-8 rounded-2xl shadow-2xl card-hover" data-aos="flip-left" data-aos-delay="200">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+              </div>
+              <h3 className="text-xl md:text-2xl font-bold text-purple-300">Soft Skills</h3>
+            </div>
+            <div className="flex flex-wrap gap-2 md:gap-3">
+              {['Teamwork','Problem Solving','Communication','Critical Thinking','Adaptability'].map((s,i)=>
+                <span key={s} className="badge badge-sm md:badge-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white skill-badge px-3 md:px-4 py-2 md:py-3 font-semibold shadow-lg text-xs md:text-sm" style={{animationDelay:`${i*0.2}s`}}>{s}</span>
+              )}
             </div>
           </div>
  
-          <div className="glassmorphism p-8 rounded-2xl shadow-2xl card-hover" data-aos="flip-left" data-aos-delay="100">
-            <div className="flex items-center gap-3 mb-6"><div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center"><svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg></div><h3 className="text-2xl font-bold text-purple-300">Tools</h3></div>
-            <div className="grid grid-cols-2 gap-6">
-              {[{src:"https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg",name:"Figma"},{src:"aset/microsoft.png",name:"MS Office"},{src:"aset/laravel.jpeg",name:"Laravel"},{src:"https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg",name:"VS Code"}].map(t=>
+          <div className="glassmorphism p-6 md:p-8 rounded-2xl shadow-2xl card-hover" data-aos="flip-left" data-aos-delay="100">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+              </div>
+              <h3 className="text-xl md:text-2xl font-bold text-purple-300">Tools</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-4 md:gap-6">
+              {[
+                {src:"https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg",name:"Figma"},
+                {src:"aset/microsoft.png",name:"MS Office"},
+                {src:"aset/laravel.jpeg",name:"Laravel"},
+                {src:"https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg",name:"VS Code"}
+              ].map(t=>
                 <div key={t.name} className="flex flex-col items-center group">
-                  <div className="w-16 h-16 mb-3 rounded-xl overflow-hidden shadow-lg bg-white p-2 transform group-hover:scale-110 transition-transform tool-icon">
+                  <div className="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-3 rounded-xl overflow-hidden shadow-lg bg-white p-2 transform group-hover:scale-110 transition-transform tool-icon">
                     <img src={t.src} alt={t.name} className="w-full h-full object-contain"/>
                   </div>
-                  <span className="text-sm text-gray-300 font-medium">{t.name}</span>
+                  <span className="text-xs md:text-sm text-gray-300 font-medium text-center">{t.name}</span>
                 </div>
               )}
             </div>
@@ -464,106 +598,120 @@ function App() {
         </div>
       </section>
 
-      <section id="contact" className="py-24 px-6 bg-slate-900/40" data-aos="fade-up">
-        <div className="max-w-5xl mx-auto text-center mb-16">
-          <h2 className="text-5xl md:text-6xl font-bold gradient-text inline-block">Let's Connect!</h2>
+      <section id="contact" className="py-16 md:py-24 px-4 md:px-6 bg-slate-900/40" data-aos="fade-up">
+        <div className="max-w-5xl mx-auto text-center mb-12 md:mb-16">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold gradient-text inline-block">Let's Connect!</h2>
           <div className="w-24 h-1.5 bg-gradient-to-r from-purple-600 to-pink-600 mx-auto mt-4 rounded-full"></div>
-          <p className="text-gray-400 mt-4 text-lg">Feel free to reach out for collaborations or just a friendly hello</p>
+          <p className="text-gray-400 mt-4 text-base md:text-lg px-4">Feel free to reach out for collaborations or just a friendly hello</p>
         </div>
-        <div className="grid md:grid-cols-2 gap-6 mb-12 max-w-5xl mx-auto">
-          <a href="https://mail.google.com/mail/?view=cm&to=davidkurniawan653@gmail.com" target="_blank" className="glassmorphism p-8 rounded-2xl shadow-2xl card-hover group" data-aos="zoom-in">
-            <div className="flex flex-col items-center text-center space-y-4">
-              <img src="aset/gmail.png" alt="Gmail" className="w-16 h-14"/>
-              <h3 className="text-2xl font-bold text-purple-300">Email</h3>
-              <p className="text-gray-400">davidkurniawan653@gmail.com</p>
+        <div className="grid sm:grid-cols-2 gap-4 md:gap-6 mb-8 md:mb-12 max-w-5xl mx-auto">
+          <a href="https://mail.google.com/mail/?view=cm&to=davidkurniawan653@gmail.com" target="_blank" className="glassmorphism p-6 md:p-8 rounded-2xl shadow-2xl card-hover group" data-aos="zoom-in">
+            <div className="flex flex-col items-center text-center space-y-3 md:space-y-4">
+              <img src="aset/gmail.png" alt="Gmail" className="w-12 h-10 md:w-16 md:h-14"/>
+              <h3 className="text-xl md:text-2xl font-bold text-purple-300">Email</h3>
+              <p className="text-sm md:text-base text-gray-400 break-all">davidkurniawan653@gmail.com</p>
             </div>
           </a>
-          <a href="https://wa.me/6282131602394" target="_blank" className="glassmorphism p-8 rounded-2xl shadow-2xl card-hover group" data-aos="zoom-in" data-aos-delay="100">
-            <div className="flex flex-col items-center text-center space-y-4">
-              <img src="aset/whatsapp.png" alt="WhatsApp" className="w-16 h-16"/>
-              <h3 className="text-2xl font-bold text-purple-300">WhatsApp</h3>
-              <p className="text-gray-400">+62 821-3160-2394</p>
+          <a href="https://wa.me/6282131602394" target="_blank" className="glassmorphism p-6 md:p-8 rounded-2xl shadow-2xl card-hover group" data-aos="zoom-in" data-aos-delay="100">
+            <div className="flex flex-col items-center text-center space-y-3 md:space-y-4">
+              <img src="aset/whatsapp.png" alt="WhatsApp" className="w-12 h-12 md:w-16 md:h-16"/>
+              <h3 className="text-xl md:text-2xl font-bold text-purple-300">WhatsApp</h3>
+              <p className="text-sm md:text-base text-gray-400">+62 821-3160-2394</p>
             </div>
           </a>
         </div>
-        <div className="flex justify-center gap-8" data-aos="fade-up" data-aos-delay="200">
-          <a href="https://linkedin.com/in/mdavidkurniawan/" target="_blank" className="glassmorphism p-4 rounded-xl hover:scale-110 card-hover"><img src="aset/link.png" alt="LinkedIn" className="w-11 h-10"/></a>
-          <a href="https://github.com/Khepzzz" target="_blank" className="glassmorphism p-4 rounded-xl hover:scale-110 card-hover"><img src="aset/github.png" alt="GitHub" className="w-10 h-10"/></a>
+        <div className="flex justify-center gap-6 md:gap-8" data-aos="fade-up" data-aos-delay="200">
+          <a href="https://linkedin.com/in/mdavidkurniawan/" target="_blank" className="glassmorphism p-3 md:p-4 rounded-xl hover:scale-110 card-hover">
+            <img src="aset/link.png" alt="LinkedIn" className="w-9 h-8 md:w-11 md:h-10"/>
+          </a>
+          <a href="https://github.com/Khepzzz" target="_blank" className="glassmorphism p-3 md:p-4 rounded-xl hover:scale-110 card-hover">
+            <img src="aset/github.png" alt="GitHub" className="w-8 h-8 md:w-10 md:h-10"/>
+          </a>
         </div>
       </section>
 
-      <footer className="glassmorphism py-16 px-6 border-t border-purple-500/20">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-12 text-center md:text-left">
-
-          <div className="space-y-3">
-            <h3 className="text-3xl font-bold gradient-text">David Kurniawan</h3>
-            <p className="text-gray-400">Junior Web Developer & UI/UX Enthusiast</p>
-            <p className="text-sm text-gray-500">Jepara, Central Java</p>
+      <footer className="glassmorphism py-12 md:py-16 px-4 md:px-6 border-t border-purple-500/20">
+        <div className="max-w-7xl mx-auto grid sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 text-center md:text-left">
+          <div className="space-y-2 md:space-y-3">
+            <h3 className="text-2xl md:text-3xl font-bold gradient-text">David Kurniawan</h3>
+            <p className="text-sm md:text-base text-gray-400">Junior Web Developer & UI/UX Enthusiast</p>
+            <p className="text-xs md:text-sm text-gray-500">Jepara, Central Java</p>
           </div>
-
-          <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-purple-300 uppercase tracking-wider">Explore</h4>
-            <ul className="space-y-3 text-gray-400">
-              <li><a href="#about" className="hover:text-purple-400 transition-colors">About</a></li>
-              <li><a href="#education" className="hover:text-purple-400 transition-colors">Education</a></li>
-              <li><a href="#projects" className="hover:text-purple-400 transition-colors">Projects</a></li>
-              <li><a href="#skills" className="hover:text-purple-400 transition-colors">Skills</a></li>
-              <li><a href="#contact" className="hover:text-purple-400 transition-colors">Contact</a></li>
+          <div className="space-y-3 md:space-y-4">
+            <h4 className="text-base md:text-lg font-semibold text-purple-300 uppercase tracking-wider">Explore</h4>
+            <ul className="space-y-2 md:space-y-3 text-sm md:text-base text-gray-400">
+              {['About','Education','Projects','Skills','Contact'].map(x=>
+                <li key={x}><a href={`#${x.toLowerCase()}`} className="hover:text-purple-400 transition-colors">{x}</a></li>
+              )}
             </ul>
           </div>
-
-          <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-purple-300 uppercase tracking-wider">Social Media</h4>
-            <div className="flex justify-center md:justify-start gap-6">
+          <div className="space-y-3 md:space-y-4 sm:col-span-2 md:col-span-1">
+            <h4 className="text-base md:text-lg font-semibold text-purple-300 uppercase tracking-wider">Social Media</h4>
+            <div className="flex justify-center md:justify-start gap-4 md:gap-6">
               <a href="https://linkedin.com/in/mdavidkurniawan/" target="_blank" className="text-gray-400 hover:text-purple-400 transition-all hover:scale-125">
-                <img src="aset/link.png" alt="LinkedIn" className="w-10 h-9" />
+                <img src="aset/link.png" alt="LinkedIn" className="w-8 h-7 md:w-10 md:h-9" />
               </a>
               <a href="https://github.com/Khepzzz" target="_blank" className="text-gray-400 hover:text-purple-400 transition-all hover:scale-125">
-                <img src="aset/github.png" alt="GitHub" className="w-9 h-9" />
+                <img src="aset/github.png" alt="GitHub" className="w-7 h-7 md:w-9 md:h-9" />
               </a>
               <a href="https://wa.me/6282131602394" target="_blank" className="text-gray-400 hover:text-purple-400 transition-all hover:scale-125">
-                <img src="aset/whatsapp.png" alt="WhatsApp" className="w-9 h-9" />
+                <img src="aset/whatsapp.png" alt="WhatsApp" className="w-7 h-7 md:w-9 md:h-9" />
               </a>
             </div>
           </div>
         </div>
-
-        <div className="mt-12 pt-8 border-t border-purple-500/10 text-center">
-          <p className="text-sm text-gray-500">
+        <div className="mt-8 md:mt-12 pt-6 md:pt-8 border-t border-purple-500/10 text-center">
+          <p className="text-xs md:text-sm text-gray-500">
             © {new Date().getFullYear()} Muhammad David Kurniawan. All rights reserved.
           </p>
         </div>
       </footer>
 
-      <button id="backToTop" onClick={()=>window.scrollTo({top:0,behavior:'smooth'})} className="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-2xl opacity-0 invisible transition-all duration-300 z-40 flex items-center justify-center hover:scale-110 pulse-glow">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <button id="backToTop" onClick={()=>window.scrollTo({top:0,behavior:'smooth'})} className="fixed bottom-6 right-6 md:bottom-8 md:right-8 w-12 h-12 md:w-14 md:h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-2xl opacity-0 invisible transition-all duration-300 z-40 flex items-center justify-center hover:scale-110 pulse-glow">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
         </svg>
       </button>
 
       {modalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[9999] flex items-center justify-center p-4" onClick={closeModal}>
-          <div className="glassmorphism rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl" onClick={e=>e.stopPropagation()}>
-            <div className="flex justify-between items-center p-8 border-b border-purple-500/30 bg-gradient-to-r from-purple-900/20 to-pink-900/20">
-              <h3 className="text-3xl font-bold gradient-text">Self-Service Website for Jalur Langit Coffee</h3>
-              <button onClick={closeModal} className="btn btn-circle btn-sm glassmorphism hover:bg-red-500/50">X</button>
+          <div className="glassmorphism rounded-2xl md:rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl" onClick={e=>e.stopPropagation()}>
+            <div className="flex justify-between items-center p-4 md:p-8 border-b border-purple-500/30 bg-gradient-to-r from-purple-900/20 to-pink-900/20">
+              <h3 className="text-xl md:text-3xl font-bold gradient-text pr-4">Self-Service Website for Jalur Langit Coffee</h3>
+              <button onClick={closeModal} className="btn btn-circle btn-sm md:btn-md glassmorphism hover:bg-red-500/50 flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-            <div className="p-8 overflow-y-auto max-h-[calc(90vh-10rem)]">
-              <div className="relative group rounded-2xl overflow-hidden">
+            <div className="p-4 md:p-8 overflow-y-auto max-h-[calc(90vh-8rem)]">
+              <div className="relative group rounded-xl md:rounded-2xl overflow-hidden">
                 <div className="flex transition-transform duration-500" style={{transform:`translateX(-${currentSlide*100}%)`}}>
-                  {projects[currentProject].images.map(img=><div key={img} className="min-w-full aspect-[16/9] bg-black/40 flex items-center justify-center"><img src={img} alt="" className="max-h-full max-w-full object-contain"/></div>)}
+                  {projects[currentProject].images.map(img=>
+                    <div key={img} className="min-w-full aspect-video bg-black/40 flex items-center justify-center">
+                      <img src={img} alt="" className="max-h-full max-w-full object-contain"/>
+                    </div>
+                  )}
                 </div>
-                <button onClick={prevSlide} className="absolute left-4 top-1/2 -translate-y-1/2 btn btn-circle opacity-70 hover:opacity-100">Prev</button>
-                <button onClick={nextSlide} className="absolute right-4 top-1/2 -translate-y-1/2 btn btn-circle opacity-70 hover:opacity-100">Next</button>
+                <button onClick={prevSlide} className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 btn btn-circle btn-sm md:btn-md opacity-70 hover:opacity-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button onClick={nextSlide} className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 btn btn-circle btn-sm md:btn-md opacity-70 hover:opacity-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
-              <div className="mt-8 space-y-4 text-center">
-                <p className="text-2xl text-purple-300">{projects[currentProject].halaman}</p>
-                <p className="text-lg text-gray-300">{projects[currentProject].tech}</p>
-                <p className="text-gray-300 leading-relaxed">{projects[currentProject].desc}</p>
+              <div className="mt-6 md:mt-8 space-y-3 md:space-y-4 text-center px-2">
+                <p className="text-xl md:text-2xl text-purple-300 font-semibold">{projects[currentProject].halaman}</p>
+                <p className="text-base md:text-lg text-gray-300">{projects[currentProject].tech}</p>
+                <p className="text-sm md:text-base text-gray-300 leading-relaxed">{projects[currentProject].desc}</p>
               </div>
-              <div className="flex justify-center gap-4 mt-8">
-                <button onClick={prevProject} disabled={currentProject===0} className="btn glassmorphism">Previous Page</button>
-                <button onClick={nextProject} disabled={currentProject===projects.length-1} className="btn glassmorphism">Next Page</button>
+              <div className="flex flex-col sm:flex-row justify-center gap-3 md:gap-4 mt-6 md:mt-8">
+                <button onClick={prevProject} disabled={currentProject===0} className="btn btn-sm md:btn-md glassmorphism disabled:opacity-50 disabled:cursor-not-allowed">Previous Page</button>
+                <button onClick={nextProject} disabled={currentProject===projects.length-1} className="btn btn-sm md:btn-md glassmorphism disabled:opacity-50 disabled:cursor-not-allowed">Next Page</button>
               </div>
             </div>
           </div>
