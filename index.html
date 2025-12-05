@@ -218,24 +218,33 @@ function App() {
 
   return (
     <>
-      <div id="navbar" className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[95%] sm:max-w-5xl transition-transform ${navbarVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-        <div className="glassmorphism rounded-full shadow-2xl p-1.5 card-hover pulse-glow">
-          <div className="navbar min-h-0 hidden md:flex justify-between px-8">
-            <a href="#" className="text-xl font-bold gradient-text">Portfolio</a>
-            <ul className="menu menu-horizontal space-x-2 text-sm">
-              {['About','Education','Projects','Skills','Contact'].map(x=><li key={x}><a href={`#${x.toLowerCase()}`} className="btn btn-ghost btn-sm rounded-full text-gray-300 hover:text-purple-400 btn-hover font-medium">{x}</a></li>)}
-            </ul>
-          </div>
-          <div className="navbar min-h-0 md:hidden flex justify-between px-4">
-            <a href="#" className="text-base font-bold gradient-text">Portfolio</a>
-            <label className="btn btn-ghost btn-circle text-purple-400" onClick={()=>setDrawerOpen(!drawerOpen)}>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </label>
-          </div>
-        </div>
+{/* NAVBAR – FIX MOBILE 100% */}
+<div id="navbar" className="fixed top-4 left-4 right-4 z-50 pointer-events-none">
+  <div className="pointer-events-auto max-w-5xl mx-auto">
+    <div className="glassmorphism rounded-full shadow-2xl p-1.5 card-hover pulse-glow backdrop-blur-xl">
+      
+      {/* Desktop Navbar */}
+      <div className="navbar min-h-0 hidden md:flex justify-between px-8">
+        <a href="#" className="text-xl font-bold gradient-text">Portfolio</a>
+        <ul className="menu menu-horizontal space-x-2 text-sm">
+          {['About','Education','Projects','Skills','Contact'].map(x=>
+            <li key={x}><a href={`#${x.toLowerCase()}`} className="btn btn-ghost btn-sm rounded-full text-gray-300 hover:text-purple-400 btn-hover font-medium">{x}</a></li>
+          )}
+        </ul>
       </div>
+
+      {/* Mobile Navbar */}
+      <div className="navbar min-h-0 md:hidden flex justify-between px-5">
+        <a href="#" className="text-lg font-bold gradient-text">Portfolio</a>
+        <label className="btn btn-ghost btn-circle swap swap-rotate text-purple-300" onClick={()=>setDrawerOpen(!drawerOpen)}>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
 
       {drawerOpen && (
         <div className="fixed inset-0 z-[9999] flex">
