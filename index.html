@@ -11,7 +11,6 @@
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
-
   <script defer src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script defer src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script defer src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -94,6 +93,7 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [drawerOpen]);
 
+  // AOS + Back to top
   useEffect(() => {
     AOS.init({ duration: 1000, once: true, offset: 100 });
     const btn = document.getElementById('backToTop');
@@ -497,8 +497,8 @@ function App() {
             <ul className="space-y-3 text-gray-400">
               <li><a href="#about" className="hover:text-purple-400 transition-colors">About</a></li>
               <li><a href="#education" className="hover:text-purple-400 transition-colors">Education</a></li>
-              <li><a href="#skills" className="hover:text-purple-400 transition-colors">Skills</a></li>
               <li><a href="#projects" className="hover:text-purple-400 transition-colors">Projects</a></li>
+              <li><a href="#skills" className="hover:text-purple-400 transition-colors">Skills</a></li>
               <li><a href="#contact" className="hover:text-purple-400 transition-colors">Contact</a></li>
             </ul>
           </div>
