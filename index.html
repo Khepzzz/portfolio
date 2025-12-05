@@ -5,15 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Muhammad David Kurniawan - Portfolio</title>
 
-  <!-- Tailwind + DaisyUI -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" />
 
-  <!-- AOS Animation -->
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
-  <!-- React 18 + Babel (untuk JSX di browser) -->
+
   <script defer src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script defer src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script defer src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -85,7 +83,6 @@ function App() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const lastScroll = useRef(0);
 
-  // Navbar hide/show
   useEffect(() => {
     const handleScroll = () => {
       if (drawerOpen) return;
@@ -97,7 +94,6 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [drawerOpen]);
 
-  // AOS + Back to top
   useEffect(() => {
     AOS.init({ duration: 1000, once: true, offset: 100 });
     const btn = document.getElementById('backToTop');
